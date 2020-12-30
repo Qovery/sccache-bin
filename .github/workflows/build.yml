@@ -1,6 +1,8 @@
 name: build
 
-on: push
+on:
+  create:
+    tags:
 
 jobs:
   build:
@@ -11,4 +13,12 @@ jobs:
         with:
           toolchain: stable
       - name: build sccache
-        run: cargo install sccache
+        run: |
+          cargo install sccache --version $(echo ${{ github.ref }} | awk -F'/' '{ print $3 }')
+          cp -v /home/runner/.cargo/bin/sccache .
+      - name: Release
+        uses: fnkr/github-action-ghr@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GHR_PATH: sccache
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
